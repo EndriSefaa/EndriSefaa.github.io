@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Simple Spreadsheet</title>
+  <style>
+    table { border-collapse: collapse; }
+    td, th { border: 1px solid #ccc; width: 60px; height: 30px; text-align: center; }
+    input { width: 95%; height: 90%; border: none; text-align: right; }
+    input:focus { outline: 1px solid #0078d7; }
+  </style>
+</head>
+<body>
+  <h2>Simple Spreadsheet (10x10)</h2>
+  <table id="spreadsheet">
+    <thead>
+      <tr>
+        <th></th>
+        <!-- Column headers A-J -->
+        <script>
+          for (let c = 0; c < 10; c++) {
+            document.write(`<th>${String.fromCharCode(65 + c)}</th>`);
+          }
+        </script>
+      </tr>
+    </thead>
+    <tbody>
+      <script>
+        for (let r = 1; r <= 10; r++) {
+          document.write('<tr>');
+          document.write(`<th>${r}</th>`);
+          for (let c = 0; c < 10; c++) {
+            let cellId = String.fromCharCode(65 + c) + r;
+            document.write(`<td><input id="${cellId}" data-cell="${cellId}" oninput="evaluateCell('${cellId}')" onfocus="showFormula('${cellId}')" onblur="showResult('${cellId}')"></td>`);
+          }
+          document.write('</tr>');
+        }
+      </script>
+    </tbody>
+  </table>
+  <script>
+    // Store cell values and formulas
+    const cellValues = {};
+    const cellFormulas = {};
+
+    function getCellValue(cellId) {
+      const input = document.getElementById(cellId);
+      if (!input) return '';
+      let val = input.value.trim();
+      if (val.startsWith('=')) {
+        return evaluateFormula(val.substring(1), cellId);
+      }
+      if (!isNaN(val) && val !== '') return Number(val);
+      return val;
+    }
+
+    function evaluateCell(cellId) {
+      const input = document.getElementById(cellId);
+      let val = input.value.trim();
+      if (val.startsWith('=')) {
+        cellFormulas[cellId] = val;
+        let result = evaluateFormula(val.substring(1), cellId);
+        input.title = result;
+        cellValues[cellId] = result;
+      } else {
+        delete cellFormulas[cellId];
+        cellValues[cellId] = val;
+        input.title = '';
+      }
+      // Update dependent cells
+      updateAllCells();
+    }
+
+    function updateAllCells() {
+      for (let cellId in cellFormulas) {
+        const input = document.getElementById(cellId);
+        if (input && document.activeElement !== input) {
+          let result = evaluateFormula(cellFormulas[cellId].substring(1), cellId);
+          input.value = result;
+          input.title = result;
+          cellValues[cellId] = result;
+        }
+      }
+    }
+
+    function evaluateFormula(formula, selfId) {
+      // Support SUM(A1:A10) and MULT(A1,B2,...)
+      formula = formula.toUpperCase();
+      if (formula.startsWith('SUM(') && formula.endsWith(')')) {
+        let range = formula.slice(4, -1);
+        let cells = parseRange(range);
+        let sum = 0;
+        for (let cell of cells) {
+          let v = getCellValue(cell);
+          if (!isNaN(v) && v !== '') sum += Number(v);
+        }
+        return sum;
+      }
+      if (formula.startsWith('MULT(') && formula.endsWith(')')) {
+        let args = formula.slice(5, -1).split(',');
+        let prod = 1;
+        for (let cell of args) {
+          let v = getCellValue(cell.trim());
+          if (!isNaN(v) && v !== '') prod *= Number(v);
+        }
+        return prod;
+      }
+      // Single cell reference
+      if (/^[A-J]([1-9]|10)$/.test(formula)) {
+        return getCellValue(formula);
+      }
+      return 'ERR';
+    }
+
+    function parseRange(range) {
+      // e.g., A1:A10
+      let [start, end] = range.split(':');
+      if (!start || !end) return [];
+      let col1 = start[0], row1 = parseInt(start.slice(1));
+      let col2 = end[0], row2 = parseInt(end.slice(1));
+      let cells = [];
+      if (col1 === col2) {
+        for (let r = row1; r <= row2; r++) {
+          cells.push(col1 + r);
+        }
+      } else if (row1 === row2) {
+        for (let c = col1.charCodeAt(0); c <= col2.charCodeAt(0); c++) {
+          cells.push(String.fromCharCode(c) + row1);
+        }
+      }
+      return cells;
+    }
+
+    function showFormula(cellId) {
+      const input = document.getElementById(cellId);
+      if (cellFormulas[cellId]) {
+        input.value = cellFormulas[cellId];
+      }
+    }
+
+    function showResult(cellId) {
+      const input = document.getElementById(cellId);
+      if (cellFormulas[cellId]) {
+        let result = evaluateFormula(cellFormulas[cellId].substring(1), cellId);
+        input.value = result;
+        input.title = result;
+        cellValues[cellId] = result;
+      }
+    }
+  </script>
+  <p>Formulas supported: <code>=SUM(A1:A10)</code>, <code>=MULT(A1,B2)</code>, <code>=A1</code></p>
+</body>
+</html> 
