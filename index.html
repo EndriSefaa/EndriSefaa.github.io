@@ -12,6 +12,7 @@
 </head>
 <body>
   <h2>Simple Spreadsheet (10x10)</h2>
+  <button onclick="clearAllCells()">Clear All Cells</button>
   <table id="spreadsheet">
     <thead>
       <tr>
@@ -145,6 +146,21 @@
         input.value = result;
         input.title = result;
         cellValues[cellId] = result;
+      }
+    }
+
+    function clearAllCells() {
+      for (let r = 1; r <= 10; r++) {
+        for (let c = 0; c < 10; c++) {
+          let cellId = String.fromCharCode(65 + c) + r;
+          let input = document.getElementById(cellId);
+          if (input) {
+            input.value = '';
+            input.title = '';
+          }
+          delete cellValues[cellId];
+          delete cellFormulas[cellId];
+        }
       }
     }
   </script>
