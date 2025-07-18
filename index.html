@@ -63,10 +63,12 @@
         let result = evaluateFormula(val.substring(1), cellId);
         input.title = result;
         cellValues[cellId] = result;
+        input.setAttribute('data-value', result);
       } else {
         delete cellFormulas[cellId];
         cellValues[cellId] = val;
         input.title = '';
+        input.setAttribute('data-value', val);
       }
       // Update dependent cells
       updateAllCells();
@@ -80,6 +82,7 @@
           input.value = result;
           input.title = result;
           cellValues[cellId] = result;
+          input.setAttribute('data-value', result);
         }
       }
     }
@@ -186,6 +189,7 @@
           if (input) {
             input.value = '';
             input.title = '';
+            input.setAttribute('data-value', '');
           }
           delete cellValues[cellId];
           delete cellFormulas[cellId];
@@ -206,6 +210,7 @@
         if (inputA) {
           inputA.value = columnAData[i];
           cellValues[cellIdA] = columnAData[i];
+          inputA.setAttribute('data-value', columnAData[i]);
         }
         
         // Populate column B
@@ -214,6 +219,7 @@
         if (inputB) {
           inputB.value = columnBData[i];
           cellValues[cellIdB] = columnBData[i];
+          inputB.setAttribute('data-value', columnBData[i]);
         }
       }
     }
