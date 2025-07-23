@@ -3,24 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <title>Simple Spreadsheet</title>
-  <style>
-    table { border-collapse: collapse; }
-    td, th { border: 1px solid #ccc; width: 60px; height: 30px; text-align: center; }
-    input { width: 95%; height: 90%; border: none; text-align: right; }
-    input:focus { outline: 1px solid #0078d7; }
-  </style>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body>
-  <h2>Simple Spreadsheet (10x10)</h2>
-  <button onclick="clearAllCells()">Clear All Cells</button>
-  <table id="spreadsheet">
+  <h2 class="text-xl font-bold mb-2 ml-6">Simple Spreadsheet (10x10)</h2>
+  <button onclick="clearAllCells()" class="mb-2 px-3 py-1 border border-gray-400 text-gray-700 bg-transparent rounded hover:bg-gray-100 transition-colors ml-6">Clear All Cells</button>
+  <table id="spreadsheet" class="border-collapse border border-gray-300 ml-6">
     <thead>
       <tr>
         <th></th>
-        <!-- Column headers A-J -->
+        <!-- Column headers A-G -->
         <script>
-          for (let c = 0; c < 10; c++) {
-            document.write(`<th>${String.fromCharCode(65 + c)}</th>`);
+          for (let c = 0; c < 7; c++) {
+            document.write(`<th class='border border-gray-300 w-16 h-8 text-center bg-gray-100'>${String.fromCharCode(65 + c)}</th>`);
           }
         </script>
       </tr>
@@ -29,16 +24,17 @@
       <script>
         for (let r = 1; r <= 10; r++) {
           document.write('<tr>');
-          document.write(`<th>${r}</th>`);
-          for (let c = 0; c < 10; c++) {
+          document.write(`<th class='border border-gray-300 w-16 h-8 text-center bg-gray-100'>${r}</th>`);
+          for (let c = 0; c < 7; c++) {
             let cellId = String.fromCharCode(65 + c) + r;
-            document.write(`<td><input id="${cellId}" data-cell="${cellId}" oninput="evaluateCell('${cellId}')" onfocus="showFormula('${cellId}')" onblur="showResult('${cellId}')"></td>`);
+            document.write(`<td id="td-${cellId}" class='border border-gray-300 text-center p-0 align-top w-[7.7rem] min-w-[7.7rem]'><textarea id="${cellId}" data-cell="${cellId}" rows="1" class="spreadsheet-cell resize-none border-none text-right focus:outline-blue-500 bg-transparent p-1 w-full min-h-[2rem] max-h-40" style="overflow:hidden;" oninput="autoGrow(this); evaluateCell('${cellId}')" onfocus="showFormula('${cellId}')" onblur="showResult('${cellId}')"></textarea></td>`);
           }
           document.write('</tr>');
         }
       </script>
     </tbody>
   </table>
+  <div id="cell-value-display" style="margin:10px 0; font-weight:bold;"></div>
   <script>
     // Store cell values and formulas
     const cellValues = {};
@@ -57,6 +53,7 @@
 
     function evaluateCell(cellId) {
       const input = document.getElementById(cellId);
+      autoGrow(input);
       let val = input.value.trim();
       if (val.startsWith('=')) {
         cellFormulas[cellId] = val;
@@ -168,6 +165,7 @@
       const input = document.getElementById(cellId);
       if (cellFormulas[cellId]) {
         input.value = cellFormulas[cellId];
+        autoGrow(input);
       }
     }
 
@@ -178,6 +176,7 @@
         input.value = result;
         input.title = result;
         cellValues[cellId] = result;
+        autoGrow(input);
       }
     }
 
@@ -190,6 +189,7 @@
             input.value = '';
             input.title = '';
             input.setAttribute('data-value', '');
+            autoGrow(input);
           }
           delete cellValues[cellId];
           delete cellFormulas[cellId];
@@ -211,6 +211,7 @@
           inputA.value = columnAData[i];
           cellValues[cellIdA] = columnAData[i];
           inputA.setAttribute('data-value', columnAData[i]);
+          autoGrow(inputA);
         }
         
         // Populate column B
@@ -220,6 +221,7 @@
           inputB.value = columnBData[i];
           cellValues[cellIdB] = columnBData[i];
           inputB.setAttribute('data-value', columnBData[i]);
+          autoGrow(inputB);
         }
       }
     }
@@ -228,7 +230,26 @@
     window.onload = function() {
       populateInitialData();
     };
+
+    // Auto-grow textarea height to fit content, no scrollbars, always inside cell
+    function autoGrow(textarea) {
+      textarea.style.height = '2rem';
+      textarea.style.overflow = 'hidden';
+      textarea.style.whiteSpace = 'pre-wrap';
+      textarea.style.resize = 'none';
+      textarea.style.height = textarea.scrollHeight + 'px';
+    }
+
+    // Handle Enter to end input, Shift+Enter for newline
+    document.addEventListener('keydown', function(e) {
+      if (e.target.tagName === 'TEXTAREA') {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          e.target.blur();
+        }
+      }
+    });
   </script>
-  <p>Formulas supported: <code>=SUM(A1:A10)</code>, <code>=MULT(A1,B2)</code>, <code>=A1</code>, <code>=WEIGHTEDSUM(A2:A10,B2:B10)</code>, <code>=DIV(A2,B2)</code></p>
+  <p class="ml-6">Formulas supported: <code>=SUM(A1:A10)</code>, <code>=MULT(A1,B2)</code>, <code>=A1</code>, <code>=WEIGHTEDSUM(A2:A10,B2:B10)</code>, <code>=DIV(A2,B2)</code></p>
 </body>
 </html> 
