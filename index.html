@@ -12,9 +12,9 @@
     <thead>
       <tr>
         <th></th>
-        <!-- Column headers A-G -->
+        <!-- Column headers A-E -->
         <script>
-          for (let c = 0; c < 7; c++) {
+          for (let c = 0; c < 5; c++) {
             document.write(`<th class='border border-gray-300 w-16 h-8 text-center bg-gray-100'>${String.fromCharCode(65 + c)}</th>`);
           }
         </script>
@@ -25,7 +25,7 @@
         for (let r = 1; r <= 10; r++) {
           document.write('<tr>');
           document.write(`<th class='border border-gray-300 w-16 h-8 text-center bg-gray-100'>${r}</th>`);
-          for (let c = 0; c < 7; c++) {
+          for (let c = 0; c < 5; c++) {
             let cellId = String.fromCharCode(65 + c) + r;
             document.write(`<td id="td-${cellId}" class='border border-gray-300 text-center p-0 align-top w-[7.7rem] min-w-[7.7rem]'><textarea id="${cellId}" data-cell="${cellId}" rows="1" class="spreadsheet-cell resize-none border-none text-right focus:outline-blue-500 bg-transparent p-1 w-full min-h-[2rem] max-h-40" style="overflow:hidden;" onclick="focusCellInput('${cellId}', event)" oninput="autoGrow(this); evaluateCell('${cellId}')" onfocus="showFormula('${cellId}')" onblur="showResult('${cellId}')"></textarea></td>`);
           }
@@ -88,11 +88,10 @@
       // Support SUM(A1:A10) and MULT(A1,B2,...)
       formula = formula.toUpperCase();
       if (formula.startsWith('SUM(') && formula.endsWith(')')) {
-        let range = formula.slice(4, -1);
-        let cells = parseRange(range);
+        let args = formula.slice(4, -1).split(',');
         let sum = 0;
-        for (let cell of cells) {
-          let v = getCellValue(cell);
+        for (let cell of args) {
+          let v = getCellValue(cell.trim());
           if (!isNaN(v) && v !== '') sum += Number(v);
         }
         return sum;
@@ -136,7 +135,7 @@
         return result;
       }
       // Single cell reference
-      if (/^[A-J]([1-9]|10)$/.test(formula)) {
+      if (/^[A-E]([1-9]|10)$/.test(formula)) {
         return getCellValue(formula);
       }
       return 'ERR';
@@ -166,6 +165,10 @@
       if (cellFormulas[cellId]) {
         input.value = cellFormulas[cellId];
         autoGrow(input);
+      } else {
+        // If no formula, show the current value
+        input.value = input.value || '';
+        autoGrow(input);
       }
     }
 
@@ -182,7 +185,7 @@
 
     function clearAllCells() {
       for (let r = 1; r <= 10; r++) {
-        for (let c = 0; c < 10; c++) {
+        for (let c = 0; c < 5; c++) {
           let cellId = String.fromCharCode(65 + c) + r;
           let input = document.getElementById(cellId);
           if (input) {
@@ -256,6 +259,6 @@
       if (input) input.focus();
     }
   </script>
-  <p class="ml-6">Formulas supported: <code>=SUM(A1:A10)</code>, <code>=MULT(A1,B2)</code>, <code>=A1</code>, <code>=WEIGHTEDSUM(A2:A10,B2:B10)</code>, <code>=DIV(A2,B2)</code></p>
+  <p class="ml-6">Formulas supported: <code>=SUM(A1,B2,C3)</code>, <code>=MULT(A1,B2,C3)</code>, <code>=A1</code>, <code>=WEIGHTEDSUM(A2:A10,B2:B10)</code>, <code>=DIV(A2,B2)</code></p>
 </body>
 </html> 
